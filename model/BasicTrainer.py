@@ -4,11 +4,11 @@ import os
 import time
 import copy
 import numpy as np
-# import pynvml
+import pynvml
 from lib.logger import get_logger
 from lib.metrics import All_Metrics
-# pynvml.nvmlInit()
-# handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+pynvml.nvmlInit()
+handle = pynvml.nvmlDeviceGetHandleByIndex(0)
 class Trainer(object):
     def __init__(self, model, loss, optimizer, train_loader, val_loader, test_loader,
                  scaler, args, lr_scheduler=None):
@@ -35,6 +35,7 @@ class Trainer(object):
         self.logger.info(args)
         self.logger.info('Experiment log path in: {}'.format(args.log_dir))
         self.batches_seen = 0
+        self.meminfo = 0
         #if not args.debug:
         #self.logger.info("Argument: %r", args)
         # for arg, value in sorted(vars(args).items()):
@@ -115,7 +116,12 @@ class Trainer(object):
                 self.logger.info('Train Epoch {}: {}/{} Loss: {:.6f}'.format(
                     epoch, batch_idx+1, self.train_per_epoch, loss.item()))
         train_epoch_loss = total_loss/self.train_per_epoch
-        self.logger.info('********Train Epoch {}: averaged Loss: {:.6f}, train time: {:.2f} s'.format(epoch, train_epoch_loss, time.time() - epoch_time))
+        meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        # test_loss.append(test_epoch_loss)
+        # train_time.append(time.time()-start_time)
+        # train_M.append((meminfo.used - meminfo1.used) / 1024 ** 3)
+
+        self.logger.info('********Train Epoch {}: averaged Loss: {:.6f}, GPU cost: {:.2f} GB, train time: {:.2f} s'.format(epoch, train_epoch_loss, (meminfo.used - self.meminfo.used) / 1024 ** 3,time.time() - epoch_time))
 
         #learning rate decay
         if self.args.lr_decay:
@@ -123,7 +129,7 @@ class Trainer(object):
         return train_epoch_loss
 
     def train(self):
-        # meminfo1 = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        self.meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
         best_model = None
         best_test_model =None
         # start_time = time.time()
@@ -155,10 +161,6 @@ class Trainer(object):
 
             # epoch_time = time.time()
             test_epoch_loss = self.test_epoch(epoch, test_dataloader)
-            # meminfo = pynvml.nvmlDeviceGetMemoryInfo(handle)
-            # test_loss.append(test_epoch_loss)
-            # train_time.append(time.time()-start_time)
-            # train_M.append((meminfo.used-meminfo1.used)/1024**3)
             # self.logger.info("train time: {:.2f} s".format(time.time()-epoch_time))
             #print('LR:', self.optimizer.param_groups[0]['lr'])
             if train_epoch_loss > 1e6:
@@ -249,11 +251,18 @@ class Trainer(object):
         for t in range(y_true.shape[1]):
             mae, rmse, mape, _, corr = All_Metrics(y_pred[:, t, ...], y_true[:, t, ...],
                                                 args.mae_thresh, args.mape_thresh)
-            logger.info("Horizon {:02d}, RMSE: {:.4f}, MAE: {:.4f}, CORR: {:.4f}%".format(
-                t + 1, rmse, mae, corr))
+            logger.info("Horizon {:02d}, RMSE: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}%, CORR: {:.4f}".format(
+                t + 1, rmse, mae, mape*100,corr))
         mae, rmse, mape, _, corr = All_Metrics(y_pred, y_true, args.mae_thresh, args.mape_thresh)
-        logger.info("Average Horizon, RMSE: {:.4f}, MAE: {:.4f}, CORR: {:.4f}%".format(
-                    rmse, mae, corr))
+        logger.info("test1 Average Horizon, RMSE: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}%, CORR: {:.4f} ".format(
+                    rmse, mae, mape*100,corr))
+
+        # mae, rmse, mape, _, corr = All_Metrics(y_pred[...,0], y_true[...,0], args.mae_thresh, args.mape_thresh)
+        # logger.info("test1 Average Horizon, RMSE: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}%".format(
+        #             rmse, mae, mape*100))
+        # mae, rmse, mape, _, corr = All_Metrics(y_pred[...,1], y_true[...,1], args.mae_thresh, args.mape_thresh)
+        # logger.info("test1 Average Horizon, RMSE: {:.4f}, MAE: {:.4f}, MAPE: {:.4f}%".format(
+        #             rmse, mae, mape*100))
 
     @staticmethod
     def _compute_sampling_threshold(global_step, k):

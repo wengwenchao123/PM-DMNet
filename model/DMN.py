@@ -36,7 +36,7 @@ class DMN(nn.Module):
                              ('sigmoid2', nn.Sigmoid()),
                              ('fc3', nn.Linear(self.hyperGNN_dim, dim_in))]))
 
-        self.node_embeddings = nn.Parameter(torch.randn(20, self.time_dim), requires_grad=True)
+        self.node_embeddings = nn.Parameter(torch.randn(10, self.time_dim), requires_grad=True)
         self.dropout = nn.Dropout(p=0.1)
 
         # self.fc3= nn.Linear(dim_in, dim_out, bias=True)

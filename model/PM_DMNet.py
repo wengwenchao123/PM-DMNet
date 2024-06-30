@@ -82,24 +82,26 @@ class PM_DMNet(nn.Module):
         self.num_layers = args.num_layers
         self.use_D = args.use_day
         self.use_W = args.use_week
-        self.cl_decay_steps = args.lr_decay_step
         self.dropout = nn.Dropout(p=0.1)
         self.default_graph = args.default_graph
-        self.node_embeddings1 = nn.Parameter(torch.randn(self.num_node, args.embed_dim), requires_grad=True)
-        self.node_embeddings2 = nn.Parameter(torch.randn(self.num_node, args.time_dim), requires_grad=True)
+        self.node_embeddings = nn.Parameter(torch.randn(self.num_node, args.embed_dim), requires_grad=True)
+        # self.node_embeddings2 = nn.Parameter(torch.randn(self.num_node, args.time_dim), requires_grad=True)
         self.T_i_D_emb = nn.Parameter(torch.empty(288, args.time_dim))
         self.D_i_W_emb = nn.Parameter(torch.empty(7, args.time_dim))
 
         self.encoder = PM_Encoder(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
                                   args.embed_dim, args.time_dim, args.num_layers)
-        self.decoder = PM_Decoder(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
-                                  args.embed_dim, args.time_dim, args.num_layers)
+        # self.decoder = PM_Decoder(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
+        #                           args.embed_dim, args.time_dim, args.num_layers)
         #predictor
         self.proj = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim, bias=True))
         self.end_conv1 = nn.Conv2d(1, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
         # self.end_conv2 = nn.Conv2d(12, 12, kernel_size=(1, 1), bias=True)
-
-        self.TA = TransformAttentionModel(self.hidden_dim, args.time_dim,args.embed_dim)
+        if args.type == 'P':
+            self.TA = TransformAttentionModel(self.hidden_dim, args.time_dim,args.embed_dim)
+            self.decoder = Parallel_decoder(args)
+        elif args.type =='R':
+            self.decoder = Recurrent_decoder(args)
     def forward(self, source, traget=None, batches_seen=None):
         #source: B, T_1, N, D
         #target: B, T_2, N, D
@@ -120,16 +122,54 @@ class PM_DMNet(nn.Module):
         node_embedding2 = torch.mul(T_i_D_emb2, D_i_W_emb2)
 
 
-        en_node_embeddings=[node_embedding1,self.node_embeddings1]
+        en_node_embeddings=[node_embedding1,self.node_embeddings]
 
         # source = source[..., :self.input_dim].unsqueeze(-1)
         source = source[..., :self.input_dim]
 
         init_state = self.encoder.init_hidden(source.shape[0])  # [2,64,307,64]
-        state, [h_n] = self.encoder(source, init_state, en_node_embeddings)  # B, T, N, hidden
-        h_n = h_n.unsqueeze(1)
-        # output = self.end_conv1(self.dropout(h_n)).reshape(-1,self.horizon,self.num_node,self.output_dim)
+        state, h_n = self.encoder(source, init_state, en_node_embeddings)  # B, T, N, hidden
 
+        output =self.decoder(source, traget,h_n,node_embedding1, node_embedding2,self.node_embeddings,batches_seen)
+        # h_n = h_n[0].unsqueeze(1)
+        # # output = self.end_conv1(self.dropout(h_n)).reshape(-1,self.horizon,self.num_node,self.output_dim)
+        #
+        # de_input = self.TA(h_n,node_embedding1[:,-1,:].unsqueeze(1),node_embedding2).flatten(0, 1)
+        # # de_input = h_n.expand(-1,self.horizon,-1,-1).flatten(0, 1)
+        # # output = self.proj(self.dropout(de_input))
+        # node_embedding2 = node_embedding2.flatten(0, 1)
+        # # return output
+        #
+        # go = torch.zeros((source.shape[0]*self.horizon, self.num_node, self.output_dim), device=source.device)
+        #
+        #
+        # state, ht_list = self.decoder(go, [de_input], [node_embedding2, self.node_embeddings])
+        # go = self.proj(self.dropout(state))
+        # output = go.reshape(source.shape[0],self.horizon,self.num_node,self.output_dim)
+
+
+        return output
+
+
+class Parallel_decoder(nn.Module):
+    def __init__(self,args=None):
+        super(Parallel_decoder,self).__init__()
+        self.TA= TransformAttentionModel(args.rnn_units, args.time_dim,args.embed_dim)
+        self.num_node = args.num_nodes
+        self.input_dim = args.input_dim
+        self.hidden_dim = args.rnn_units
+        self.output_dim = args.output_dim
+        self.horizon = args.horizon
+        self.decoder = PM_Decoder(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
+                                  args.embed_dim, args.time_dim, args.num_layers)
+        # self.proj = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim, bias=True))
+        self.dropout = nn.Dropout(p=0.1)
+        self.proj = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim, bias=True))
+        self.linear = nn.Parameter(torch.randn(self.horizon,self.hidden_dim, self.output_dim), requires_grad=True)
+        # self.end_conv = nn.Conv2d(args.horizon, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
+    def forward(self, source, traget, h_n,node_embedding1, node_embedding2,node_embeddings,batches_seen):
+        h_n = h_n[0]
+        h_n = h_n.unsqueeze(1)
         de_input = self.TA(h_n,node_embedding1[:,-1,:].unsqueeze(1),node_embedding2).flatten(0, 1)
         # de_input = h_n.expand(-1,self.horizon,-1,-1).flatten(0, 1)
         # output = self.proj(self.dropout(de_input))
@@ -139,16 +179,53 @@ class PM_DMNet(nn.Module):
         go = torch.zeros((source.shape[0]*self.horizon, self.num_node, self.output_dim), device=source.device)
 
 
-        state, ht_list = self.decoder(go, [de_input], [node_embedding2, self.node_embeddings1])
+        state, ht_list = self.decoder(go, [de_input], [node_embedding2, node_embeddings])
+        # state = state.reshape(source.shape[0],self.horizon,self.num_node,self.hidden_dim)
+
         go = self.proj(self.dropout(state))
         output = go.reshape(source.shape[0],self.horizon,self.num_node,self.output_dim)
-        #
+
+        # output = torch.matmul(self.dropout(state), self.linear)
+
+        # output = self.end_conv(self.dropout(state)).reshape(source.shape[0],self.horizon,self.num_node,self.output_dim)
         #
         return output
 
+class Recurrent_decoder(nn.Module):
+    def __init__(self,args=None):
+        super(Recurrent_decoder,self).__init__()
+        # self.cl_decay_steps = args.lr_decay_step
+        self.num_node = args.num_nodes
+        self.input_dim = args.input_dim
+        self.hidden_dim = args.rnn_units
+        self.output_dim = args.output_dim
+        self.horizon = args.horizon
+        self.teacher_forcing = args.teacher_forcing
+        self.teacher_decay_step = args.teacher_decay_step
+        self.decoder = PM_Decoder(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
+                                  args.embed_dim, args.time_dim, args.num_layers)
+        self.proj = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim, bias=True))
+    def forward(self, source, traget, h_n, node_embedding1,node_embedding2,node_embeddings, batches_seen):
+        ht_list= h_n
+        go = torch.zeros((source.shape[0], self.num_node, self.output_dim), device=source.device)
+        out = []
+        for t in range(self.horizon):
+            state, ht_list = self.decoder(go, ht_list, [node_embedding2[:, t, :], node_embeddings])
+            go = self.proj(state)
+            out.append(go)
+            if self.training and self.teacher_forcing:     #这里的课程学习用了给予一定概率用真实值代替预测值来学习的教师-学生学习法（名字忘了，大概跟着有关）
+                c = np.random.uniform(0, 1)
+                if c < self._compute_sampling_threshold(batches_seen):  #如果满足条件，则用真实值代替预测值训练
+                    # go = traget[:, t, :, :self.input_dim].unsqueeze(-1)
+                    go = traget[:, t, :, :self.input_dim]
+        output = torch.stack(out, dim=1)
 
         return output
 
+    def _compute_sampling_threshold(self, batches_seen):
+        x = self.teacher_decay_step / (
+            self.teacher_decay_step + np.exp(batches_seen / self.teacher_decay_step))
+        return x
 
 
 

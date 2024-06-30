@@ -37,6 +37,7 @@ def masked_mae_loss(scaler, mask_value):
 #parser
 args = argparse.ArgumentParser(description='arguments')
 args.add_argument('--dataset', default='taxi', type=str)  # NYCBike2 NYCBike1 NYCTaxi
+args.add_argument('--type', default='P', type=str)
 args.add_argument('--mode', default='train', type=str)
 args.add_argument('--device', default='cuda:0', type=str, help='indices of GPUs')
 args.add_argument('--debug', default='False', type=eval)
@@ -45,7 +46,7 @@ args.add_argument('--cuda', default=True, type=bool)
 args1 = args.parse_args()
 
 #get configuration
-config_file = './config_file/{}_{}.conf'.format(args1.dataset, args1.model)
+config_file = './config_file/{}/{}_{}.conf'.format(args1.type,args1.dataset, args1.model)
 #print('Read configuration file: %s' % (config_file))
 config = configparser.ConfigParser()
 config.read(config_file)
@@ -62,6 +63,7 @@ args.add_argument('--normalizer', default=config['data']['normalizer'], type=str
 args.add_argument('--column_wise', default=config['data']['column_wise'], type=eval)
 args.add_argument('--default_graph', default=config['data']['default_graph'], type=eval)
 args.add_argument('--steps_per_day', default=config['data']['steps_per_day'], type=int)
+args.add_argument('--steps_per_week', default=config['data']['steps_per_week'], type=int)
 #model
 args.add_argument('--input_dim', default=config['model']['input_dim'], type=int)
 args.add_argument('--output_dim', default=config['model']['output_dim'], type=int)
@@ -86,7 +88,9 @@ args.add_argument('--early_stop', default=config['train']['early_stop'], type=ev
 args.add_argument('--early_stop_patience', default=config['train']['early_stop_patience'], type=int)
 args.add_argument('--grad_norm', default=config['train']['grad_norm'], type=eval)
 args.add_argument('--max_grad_norm', default=config['train']['max_grad_norm'], type=int)
-args.add_argument('--teacher_forcing', default=False, type=bool)
+if args1.type == 'R':
+    args.add_argument('--teacher_forcing', default=config['train']['teacher_forcing'], type=bool)
+    args.add_argument('--teacher_decay_step', default=config['train']['teacher_decay_step'], type=int)
 args.add_argument('--real_value', default=config['train']['real_value'], type=eval, help = 'use real value for loss calculation')
 #test
 args.add_argument('--mae_thresh', default=config['test']['mae_thresh'], type=eval)
@@ -146,7 +150,7 @@ if args.lr_decay:
 #config log path
 current_time = datetime.now().strftime('%Y%m%d%H%M%S')
 current_dir = os.path.dirname(os.path.realpath(__file__))
-log_dir = os.path.join(current_dir,'experiments', args.dataset, current_time)
+log_dir = os.path.join(current_dir,'experiments', args.dataset, args.type, current_time)
 args.log_dir = log_dir
 
 #start training
@@ -155,7 +159,7 @@ trainer = Trainer(model, loss, optimizer, train_loader, val_loader, test_loader,
 if args.mode == 'train':
     trainer.train()
 elif args.mode == 'test':
-    model.load_state_dict(torch.load('./pre-trained/{}.pth'.format(args.dataset)))
+    model.load_state_dict(torch.load('./pre-trained/{}/{}.pth'.format(args.type,args.dataset)))
     print("Load saved model")
     trainer.test(model, trainer.args, test_loader, scaler, trainer.logger)
 else:
