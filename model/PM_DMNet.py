@@ -163,9 +163,10 @@ class Parallel_decoder(nn.Module):
         self.decoder = PM_Decoder(args.num_nodes, args.input_dim, args.rnn_units, args.cheb_k,
                                   args.embed_dim, args.time_dim, args.num_layers)
         # self.proj = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim, bias=True))
-        self.dropout = nn.Dropout(p=0.1)
-        self.proj = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim, bias=True))
-        self.linear = nn.Parameter(torch.randn(self.horizon,self.hidden_dim, self.output_dim), requires_grad=True)
+        self.dropout = nn.Dropout(p=0.)
+        # self.proj = nn.Sequential(nn.Linear(self.hidden_dim, self.output_dim, bias=True))
+        self.weights = nn.Parameter(torch.FloatTensor(self.horizon,self.hidden_dim, self.output_dim))
+        self.bias = nn.Parameter(torch.FloatTensor(self.horizon,self.output_dim))
         # self.end_conv = nn.Conv2d(args.horizon, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
     def forward(self, source, traget, h_n,node_embedding1, node_embedding2,node_embeddings,batches_seen):
         h_n = h_n[0]
@@ -180,12 +181,13 @@ class Parallel_decoder(nn.Module):
 
 
         state, ht_list = self.decoder(go, [de_input], [node_embedding2, node_embeddings])
-        # state = state.reshape(source.shape[0],self.horizon,self.num_node,self.hidden_dim)
+        
 
-        go = self.proj(self.dropout(state))
-        output = go.reshape(source.shape[0],self.horizon,self.num_node,self.output_dim)
+        # go = self.proj(self.dropout(state))
+        # output = go.reshape(source.shape[0],self.horizon,self.num_node,self.output_dim)
 
-        # output = torch.matmul(self.dropout(state), self.linear)
+        state = state.reshape(source.shape[0],self.horizon,self.num_node,self.hidden_dim)
+        output = torch.matmul(self.dropout(state), self.weights)+self.bias.unsqueeze(dim=-2)
 
         # output = self.end_conv(self.dropout(state)).reshape(source.shape[0],self.horizon,self.num_node,self.output_dim)
         #
