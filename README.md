@@ -1,4 +1,4 @@
-This is a PyTorch implementation of PM-DMNet: Pattern-Matching Dynamic Memory Network for Traffic Prediction
+This is a PyTorch implementation of **[Pattern-Matching Dynamic Memory Network for Dual-Mode Traffic Prediction)**
 
 ## Table of Contents
 
