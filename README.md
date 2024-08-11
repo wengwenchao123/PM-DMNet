@@ -22,11 +22,18 @@ Unzip the downloaded dataset files into the `data` folder.
 
 # Model Training
 ```bash
-python run.py --datasets {DATASET_NAME} --mode {MODE_NAME}
+python run.py --datasets {DATASET_NAME} --type {MODEL_TYPE} --mode {MODE_NAME} 
 ```
 Replace `{DATASET_NAME}` with one of datasets.
 
 such as `python run.py --NYC-Taxi16 `
+
+To run PM-DMNet with the desired configuration, set the `type` parameter accordingly:
+
+- Set `type = "P"` to run PM-DMNet(P).
+- Set `type = "R"` to run PM-DMNet(R).
+
+This approach allows you to easily switch between the parallel prediction mode (PMP) and the recursive prediction mode (RMP) based on your specific requirements.
 
 There are two options for `{MODE_NAME}` : `train` and `test`
 
