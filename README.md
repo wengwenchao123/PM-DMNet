@@ -18,9 +18,9 @@ Python 3.6.5, Pytorch 1.9.0, Numpy 1.16.3, argparse and configparser
 ```bash
 python run.py --datasets {DATASET_NAME} --mode {MODE_NAME}
 ```
-Replace `{DATASET_NAME}` with one of `bike`, `taxi`, `NYCBike1`, `NYCBike2`, `NYCTaxi`
+Replace `{DATASET_NAME}` with one of datasets.
 
-such as `python run.py --datasets bike`
+such as `python run.py --NYC-Taxi16 `
 
 There are two options for `{MODE_NAME}` : `train` and `test`
 
