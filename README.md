@@ -1,4 +1,6 @@
-This is a PyTorch implementation of **Pattern-Matching Dynamic Memory Network for Dual-Mode Traffic Prediction**
+## Pattern-Matching Dynamic Memory Network for Dual-Mode Traffic Prediction
+
+This is a PyTorch implementation of **[Pattern-Matching Dynamic Memory Network for Dual-Mode Traffic Prediction](https://arxiv.org/abs/2408.07100))**
 
 ## Table of Contents
 
