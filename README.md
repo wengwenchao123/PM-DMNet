@@ -32,8 +32,8 @@ such as `python run.py --NYC-Taxi16 `
 
 To run PM-DMNet with the desired configuration, set the `type` parameter accordingly:
 
-- Set `type = "P"` to run PM-DMNet(P).
-- Set `type = "R"` to run PM-DMNet(R).
+- Set `type P` to run PM-DMNet(P).
+- Set `type R` to run PM-DMNet(R).
 
 There are two options for `{MODE_NAME}` : `train` and `test`
 
