@@ -28,7 +28,7 @@ python run.py --datasets {DATASET_NAME} --type {MODEL_TYPE} --mode {MODE_NAME}
 ```
 Replace `{DATASET_NAME}` with one of datasets.
 
-such as `python run.py --NYC-Taxi16 `
+such as `python run.py --dataset NYC-Taxi16 `
 
 To run PM-DMNet with the desired configuration, set the `type` parameter accordingly:
 
