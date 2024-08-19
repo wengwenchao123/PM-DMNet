@@ -2,6 +2,12 @@
 
 This is a PyTorch implementation of **[Pattern-Matching Dynamic Memory Network for Dual-Mode Traffic Prediction](https://arxiv.org/abs/2408.07100)**
 
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pattern-matching-dynamic-memory-network-for-1/traffic-prediction-on-pemsd7-l)](https://paperswithcode.com/sota/traffic-prediction-on-pemsd7-l?p=pattern-matching-dynamic-memory-network-for-1)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pattern-matching-dynamic-memory-network-for-1/traffic-prediction-on-pemsd8)](https://paperswithcode.com/sota/traffic-prediction-on-pemsd8?p=pattern-matching-dynamic-memory-network-for-1)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pattern-matching-dynamic-memory-network-for-1/traffic-prediction-on-pemsd7)](https://paperswithcode.com/sota/traffic-prediction-on-pemsd7?p=pattern-matching-dynamic-memory-network-for-1)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pattern-matching-dynamic-memory-network-for-1/traffic-prediction-on-pemsd7-m)](https://paperswithcode.com/sota/traffic-prediction-on-pemsd7-m?p=pattern-matching-dynamic-memory-network-for-1)
+[![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/pattern-matching-dynamic-memory-network-for-1/traffic-prediction-on-pemsd4)](https://paperswithcode.com/sota/traffic-prediction-on-pemsd4?p=pattern-matching-dynamic-memory-network-for-1)
+
 ## Table of Contents
 
 * configs: training Configs and model configs for each dataset
