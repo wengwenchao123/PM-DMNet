@@ -89,7 +89,7 @@ args.add_argument('--early_stop_patience', default=config['train']['early_stop_p
 args.add_argument('--grad_norm', default=config['train']['grad_norm'], type=eval)
 args.add_argument('--max_grad_norm', default=config['train']['max_grad_norm'], type=int)
 if args1.type == 'R':
-    args.add_argument('--teacher_forcing', default=config['train']['teacher_forcing'], type=bool)
+    args.add_argument('--teacher_forcing', default=config['train']['teacher_forcing'], type=eval)
     args.add_argument('--teacher_decay_step', default=config['train']['teacher_decay_step'], type=int)
 args.add_argument('--real_value', default=config['train']['real_value'], type=eval, help = 'use real value for loss calculation')
 #test
