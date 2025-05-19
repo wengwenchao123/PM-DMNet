@@ -29,33 +29,33 @@ def load_st_dataset(dataset):
     elif dataset == 'BJ':
         data_path = os.path.join('./data/BJ/BJ500.csv')
         data = np.array(pd.read_csv(data_path, header=0, index_col=0))
-    elif dataset == 'taxi':
-        data_path = os.path.join('./data/taxi/taxi_data.h5')
-        df = h5py.File(data_path, 'r')
-        rawdata = []
-        for feature in ["pick", "drop"]:
-            key = "taxi_" + feature
-            data = np.array(df[key])
-            rawdata.append(data)
-        # data = np.concatenate(rawdata, 1)
-        data = np.stack(rawdata, -1)
-    elif dataset == 'bike':
-        data_path = os.path.join('./data/bike/bike_data.h5')
+    elif dataset == 'NYC-Bike16':
+        data_path = os.path.join('./data/NYC-Bike16/NYC-Bike16.h5')
         df = h5py.File(data_path, 'r')
         rawdata = []
         for feature in ["pick", "drop"]:
             key = "bike_" + feature
             data = np.array(df[key])
             rawdata.append(data)
+        # data = np.concatenate(rawdata, 1)
         data = np.stack(rawdata, -1)
-    elif dataset == 'NYCBike1':
-        data_path = os.path.join('./data/NYCBike1/NYCBike1.npz')
+    elif dataset == 'NYC-Taxi16':
+        data_path = os.path.join('./data/NYC-Taxi16/NYC-Taxi16.h5')
+        df = h5py.File(data_path, 'r')
+        rawdata = []
+        for feature in ["pick", "drop"]:
+            key = "taxi_" + feature
+            data = np.array(df[key])
+            rawdata.append(data)
+        data = np.stack(rawdata, -1)
+    elif dataset == 'NYC-Bike14':
+        data_path = os.path.join('./data/NYC-Bike14/NYC-Bike14.npz')
         data = np.load(data_path,allow_pickle=True)['data'][:, :, :2].astype(float)
-    elif dataset == 'NYCBike2':
-        data_path = os.path.join('./data/NYCBike2/NYCBike2.npz')
+    elif dataset == 'NYC-Bike15':
+        data_path = os.path.join('./data/NYC-Bike15/NYC-Bike15.npz')
         data = np.load(data_path,allow_pickle=True)['data'][:, :, :2].astype(float)
-    elif dataset == 'NYCTaxi':
-        data_path = os.path.join('./data/NYCTaxi/NYCTaxi.npz')
+    elif dataset == 'NYC-Taxi15':
+        data_path = os.path.join('./data/NYC-Taxi15/NYC-Taxi15.npz')
         data = np.load(data_path,allow_pickle=True)['data'][:, :, :2].astype(float)
     elif dataset == 'BJTaxi':
         data_path = os.path.join('./data/BJTaxi/BJTaxi.npz')
