@@ -56,3 +56,27 @@ Here is an example of how to run the script using the specified parameters:
 ```bash
 python run.py --dataset PEMSD8 --type P --mode train
 ```
+
+## Cite
+
+If you find the paper useful, please cite as following:
+
+```
+@article{weng2025pattern,
+  title={Pattern-Matching Dynamic Memory Network for Dual-Mode Traffic Prediction},
+  author={Weng, Wenchao and Wu, Mei and Jiang, Hanyu and Kong, Wanzeng and Kong, Xiangjie and Xia, Feng},
+  journal={IEEE Transactions on Intelligent Transportation Systems},
+  year={2025},
+  publisher={IEEE}
+}
+```
+
+## More Related Works
+
+- [[Neural Networks] RGDAN: A random graph diffusion attention network for traffic prediction](https://doi.org/10.1016/j.neunet.2023.106093)
+  
+- [[Pattern Recognition] A Decomposition Dynamic Graph Convolutional Recurrent Network for Traffic Forecasting](https://www.sciencedirect.com/science/article/pii/S0031320323003710)
+
+- [[Neural Networks] PDG2Seq: Periodic Dynamic Graph to Sequence model for Traffic Flow Prediction](https://doi.org/10.1016/j.neunet.2024.106941)
+  
+
